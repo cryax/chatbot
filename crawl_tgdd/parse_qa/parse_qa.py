@@ -12,9 +12,13 @@ for ultag in soup.findAll('li', {'class': 'comment_ask'}):
     # count+=1
     # print(ultag)
     for litag in ultag.find_all('div', {'class': 'question'}):
-        
-        print('<q>',litag.text, '<q>')
-        for lirep in litag.find_all('div', {'class': 'reply'}):
-            print('<a>', lirep, '<a>')
+        print('<q>')
+        print(litag.text)
+        print('<q>')
+        print('\n')
+    for lirep in ultag.find_all('div', {'class': 'cont'}):
+        print('<a>')
+        print(lirep.text)
+        print('<a>')
         print('\n')
 print(count)
