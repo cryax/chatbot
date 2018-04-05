@@ -30,7 +30,7 @@ class QuotesSpider(scrapy.Spider):
 
     def parse(self, response):
         count = 0
-        path = '/home/dangpham/Dann/source_code/scrapy/crawl_tgdd/html-pages/'
+        path = '/media/younet/DATA/dang/source_code/chatbot/crawling/crawl_tgdd/html-pages/'
         page = response.url.split("/")[-2]
         filename = 'test_content-%s.html' % page
         content = []
@@ -49,7 +49,7 @@ class QuotesSpider(scrapy.Spider):
                         'Type': 2,
                         'order': 1,
                         'core[security_token]': 'wPj1I'})
-            content += r.text + '\nNEXT PAGE \n'
-        with open(path+filename, 'w') as f:
+            content += 'PAGE '+ str(i+1)+ '\n' + r.text 
+        with open(path+filename, 'w+') as f:
             f.write(content)
         self.log('Saved file %s' % filename)
