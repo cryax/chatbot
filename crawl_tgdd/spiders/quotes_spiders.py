@@ -3,6 +3,27 @@ import bs4
 import re
 import requests
 
+def parser_qafc(file_name, content):
+    soup = bs4.BeautifulSoup(content, "lxml")
+    count = 0
+    parsed_qa = ""
+    
+    for ultag in soup.findAll('li', {'class': 'comment_ask'}):
+
+        for litag in ultag.find_all('div', {'class': 'question'}):
+            parsed_qa+='<q>'
+            parsed_qa+=litag.text
+            parsed_qa+='</q>'
+            parsed_qa+='\n'
+        for lirep in ultag.find_all('div', {'class': 'cont'}):
+            parsed_qa+='<a>'
+            parsed_qa+=lirep.text
+            parsed_qa+='<a>'
+            parsed_qa+='\n'
+    with open(file_name, 'w+') as f:
+            f.write(parsed_qa)
+    f.close()
+
 def find_maxpage_productid(html):
     soup = bs4.BeautifulSoup(html)
 
@@ -23,19 +44,19 @@ class QuotesSpider(scrapy.Spider):
     name = "quotes"
 
     def start_requests(self):
-        
-        urls = ['https://www.thegioididong.com/dtdd/oppo-f5-6gb']
-        for url in urls:
+        f = open('/home/dangpham/Dann/source_code/scrapy/crawl_tgdd/crawl_tgdd/spiders/list_product', 'r')
+        pages = f.readlines()
+        pages = map(lambda x: 'https://www.thegioididong.com'+x.replace('\n',''), pages)
+        for url in pages:
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
         count = 0
-        path = '/media/younet/DATA/dang/source_code/chatbot/crawling/crawl_tgdd/html-pages/'
-        page = response.url.split("/")[-2]
+        path = '/home/dangpham/Dann/source_code/scrapy/crawl_tgdd/html-pages/'
+        page = response.url.split("/")[-1]
         filename = 'test_content-%s.html' % page
         content = []
         max_page, product_id = find_maxpage_productid(response.body)
-        max_page = 10
         content = ""
         for i in range(max_page+1):
             r = requests.post("https://www.thegioididong.com/commentnew/cmt/index?callback=jQuery18301935113702865583_1521652490455", 
@@ -49,7 +70,9 @@ class QuotesSpider(scrapy.Spider):
                         'Type': 2,
                         'order': 1,
                         'core[security_token]': 'wPj1I'})
-            content += 'PAGE '+ str(i+1)+ '\n' + r.text 
-        with open(path+filename, 'w+') as f:
-            f.write(content)
+            print(type(r.text))
+            content += r.text
+        parser_qafc(path+filename, content) 
+        # with open(path+filename, 'w+') as f:
+        #     f.write(content)
         self.log('Saved file %s' % filename)
