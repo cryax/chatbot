@@ -1,27 +1,14 @@
-from eve import Eve
+from flask import Flask, request
 import os
-from pymongo import MongoClient
 import json
 import ast
 import random
 import urllib 
 from sshtunnel import SSHTunnelForwarder
 import pymongo
-my_settings = {
-    'CACHE_CONTROL': 'no-cache',
-    'PAGINATION': False,
-    'DOMAIN': {
-        'data_project': {},
-        'token_manager': {},
-        'user_label': {}
-    },
-    'URL_PREFIX': 'api',
-    'RESOURCE_METHODS': ['GET', 'POST', 'DELETE'],
-    'ITEM_METHODS': ['DELETE', 'PATCH'],
-    'IF_MATCH': False
-}
+
 questions_collection = 'questions_tgdd'
-labeld_collection = 'labeld_questions_tgdd'
+labeld_collection = 'labeled_questions_tgdd'
 MONGO_HOST = "158.69.249.39"
 MONGO_DB = "rnd"
 MONGO_USER = "cicd"
@@ -34,10 +21,11 @@ server = SSHTunnelForwarder(
     remote_bind_address=('127.0.0.1', 27018)
 )
 server.start()
+# client = pymongo.MongoClient('127.0.0.1', 27017)
 client = pymongo.MongoClient('127.0.0.1', server.local_bind_port) # server.local_bind_port is assigned local port
 cl = client['rnd'][questions_collection]
 
-app = Eve(settings=my_settings)
+app = Flask(__name__)
 @app.route('/api/get_questions', methods=['GET'])
 def get_topics_collection():
     random_product = random.choice(list_product)
@@ -53,15 +41,13 @@ def get_topics_collection():
 
 @app.route('/api/save_labeled_questions', methods=['POST'])
 def save_labeled_question():
-    try:
-        data = request.data
-        content = data['content']
-        product = data['product']
+   
+    data = request.json
+    if("content" not in data) or ("product" not in data):
+        return "Error"
+    cl_save_labeled = client['rnd'][labeld_collection]
+    cl_save_labeled.insert(data)
+    return "OK"
 
-        cl_save_labeled = client['rnd'][labeld_collection]
-        cl_save_labeled.insert({"content": content, "product": product})
-        return "OK"
-    except Exception as es:
-        return es
 
 app.run(host='0.0.0.0', port=8010)
